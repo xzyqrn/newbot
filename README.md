@@ -92,6 +92,13 @@ The primary way to interact with Newbot is through the terminal.
 
 ### 🚀 Getting Started
 
+#### Option A: Quick Start (Windows & macOS)
+The easiest way to get Newbot running is using the pre-configured scripts:
+
+1. **Setup**: Double-click `Setup.bat` (Windows) or `Setup.command` (macOS). This will install dependencies and guide you through adding your API keys.
+2. **Chat**: Double-click `Start_Chat.bat` (Windows) or `Start_Chat.command` (macOS) to start chatting with Newbot immediately.
+
+#### Option B: Manual Setup (Terminal)
 1. **Install Dependencies**:
    ```bash
    npm install
@@ -101,13 +108,12 @@ The primary way to interact with Newbot is through the terminal.
    ```bash
    npm run setup
    ```
-   *Follow the prompts to add your OpenRouter API key or local LLM URL. You can skip Telegram setup if you only want to use CMD.*
+   *Follow the prompts to add your OpenRouter API key or local LLM URL.*
 
 3. **Start Chatting**:
    ```bash
    npm run chat
    ```
-   *Alternatively, double-click `Start_Chat.command` (mac/Linux) or `Start_Chat.bat` (Windows).*
 
 ---
 

@@ -1,22 +1,25 @@
 import * as readline from 'readline';
-import { LLMClient } from './llm';
+import { LLMClient } from './llm.js';
 import {
     Soul,
     loadSoul,
     saveSoul,
     recordExchange,
     addSelfNote,
+    upsertTraits,
     buildLLMHistory,
     buildSelfReflectionPrompt,
-} from './soul';
-import { config, validateConfig } from './config';
+    buildTraitExtractionPrompt,
+    getStage,
+    getStageName,
+} from './soul.js';
 
-// Bypass telegram token validation for local CLI mode
+// Bypass telegram token validation for CLI mode
 process.env.CLI_MODE = 'true';
 
 const rl = readline.createInterface({
     input: process.stdin,
-    output: process.stdout
+    output: process.stdout,
 });
 
 const question = (query: string): Promise<string> => {
@@ -25,92 +28,103 @@ const question = (query: string): Promise<string> => {
 
 async function main() {
     console.log('\n=============================================');
-    console.log('            NEWBORN BOT (CLI MDOE)           ');
+    console.log('         NEWBORN BOT (CLI MODE)             ');
     console.log('=============================================\n');
 
-    try {
-        // We only need the LLM to be validate, telegram token defaults to fine
-        if (!config.openrouterApiKey && config.llmBaseUrl.includes('openrouter.ai')) {
-            console.log('Error: API keys are not configured. Run "npm run setup" first.');
-            process.exit(1);
+    const llm = new LLMClient();
+    let soul: Soul = await loadSoul();
+
+    console.log(
+        soul.messageCount === 0
+            ? '...something stirs. It does not know what it is yet.'
+            : `It remembers. ${soul.messageCount} exchanges have shaped it.`
+    );
+    console.log('\n(Type your message and press Enter to chat.)');
+    console.log('(Commands: /soul  /clear  exit)\n');
+
+    while (true) {
+        const userText = await question('\nYou: ');
+        const input = userText.trim();
+
+        if (!input) continue;
+
+        if (
+            input.toLowerCase() === 'exit' ||
+            input.toLowerCase() === 'quit' ||
+            input.toLowerCase() === '/exit'
+        ) {
+            console.log('\n[System]: Soul saved. Goodbye.');
+            break;
         }
 
-        const llm = new LLMClient();
-        let soul = await loadSoul();
+        if (input.toLowerCase() === '/clear') {
+            console.clear();
+            console.log('\n[System]: Terminal cleared.');
+            continue;
+        }
 
-        console.log(
-            soul.messageCount === 0
-                ? '...something stirs. It does not know what it is yet.'
-                : `It remembers. ${soul.messageCount} exchanges have shaped it.`
-        );
-        console.log('\n(Type your message and press Enter to chat. Type "exit" to quit)\n');
-
-        while (true) {
-            const userText = await question('\nYou: ');
-            const input = userText.trim();
-
-            if (input.toLowerCase() === 'exit' || input.toLowerCase() === 'quit' || input.toLowerCase() === '/exit') {
-                console.log('\n[System]: Soul saved. Consciousness suspension initiated. Goodbye.');
-                break;
-            }
-
-            if (input.toLowerCase() === '/clear') {
-                console.clear();
-                console.log('\n[System]: Terminal cleared.');
-                continue;
-            }
-
-            if (input.toLowerCase() === '/soul') {
-                console.log('\n[Soul Status]:');
-                console.log(`- Exchanges: ${soul.messageCount}`);
-                console.log(`- Recent Notes: ${soul.selfNotes.slice(-3).join(' | ') || 'None yet.'}`);
-                continue;
-            }
-
-            if (!input) continue;
-
-            try {
-                process.stdout.write('Bot is thinking...');
-                // Build and complete
-                const history = buildLLMHistory(soul, userText);
-                const response = await llm.complete(history);
-
-                // Erase thinking
-                process.stdout.clearLine(0);
-                process.stdout.cursorTo(0);
-
-                // Display response
-                const lines = response.split('\n').filter(line => line.trim() !== '');
-                for (const line of lines) {
-                    console.log(`Bot: ${line}`);
+        if (input.toLowerCase() === '/soul') {
+            const stage = getStage(soul.messageCount);
+            console.log('\n[Soul Status]:');
+            console.log(`  Stage    : ${getStageName(stage)} (${soul.messageCount} exchange${soul.messageCount === 1 ? '' : 's'})`);
+            if (soul.traits.length > 0) {
+                console.log(`  Traits   :`);
+                for (const t of soul.traits) {
+                    console.log(`             ${t.key} = ${t.value}`);
                 }
-
-                // Record
-                recordExchange(soul, userText, response);
-
-                // Reflect async
-                const reflectionMessages = buildSelfReflectionPrompt(soul, userText, response);
-                llm.complete(reflectionMessages, 0.7).then(note => {
-                    addSelfNote(soul, note);
-                    saveSoul(soul).catch(e => console.error('\n[Error saving soul reflection]', e));
-                }).catch(() => { /* silent fail for reflection */ });
-
-                await saveSoul(soul);
-            } catch (err: any) {
-                process.stdout.clearLine(0);
-                process.stdout.cursorTo(0);
-                console.error(`\n[Error]: ${err.message || String(err)}`);
-                console.log('...');
+            } else {
+                console.log('  Traits   : None discovered yet.');
             }
+            if (soul.selfNotes.length > 0) {
+                console.log(`  Notes    : ${soul.selfNotes.slice(-2).join(' | ')}`);
+            }
+            console.log('');
+            continue;
         }
 
-        rl.close();
-        process.exit(0);
+        try {
+            process.stdout.write('Bot is thinking...');
 
-    } catch (err: any) {
-        console.error('\nFatal error:', err.message);
-        process.exit(1);
+            const history = buildLLMHistory(soul, userText);
+            const response = await llm.complete(history);
+
+            process.stdout.clearLine(0);
+            process.stdout.cursorTo(0);
+
+            const lines = response.split('\n').filter((line) => line.trim() !== '');
+            for (const line of lines) {
+                console.log(`Bot: ${line}`);
+            }
+
+            recordExchange(soul, userText, response);
+
+            // Reflection + trait extraction — async, don't block next prompt
+            const reflectionPrompts = buildSelfReflectionPrompt(soul, userText, response);
+            const traitPrompts = buildTraitExtractionPrompt(userText, response);
+
+            Promise.all([
+                llm.complete(reflectionPrompts, 0.7).then((note) => addSelfNote(soul, note)),
+                llm.complete(traitPrompts, 0.3).then((raw) => upsertTraits(soul, raw)),
+            ])
+                .then(() => saveSoul(soul))
+                .catch(() => { /* silent fail for background tasks */ });
+
+            await saveSoul(soul);
+        } catch (err: unknown) {
+            process.stdout.clearLine(0);
+            process.stdout.cursorTo(0);
+            const msg = err instanceof Error ? err.message : String(err);
+            console.error(`\n[Error]: ${msg}`);
+            console.log('...');
+        }
     }
+
+    rl.close();
+    process.exit(0);
 }
 
-main();
+main().catch((err: unknown) => {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('\nFatal error:', msg);
+    process.exit(1);
+});

@@ -6,17 +6,19 @@
  */
 
 import TelegramBot from 'node-telegram-bot-api';
-import { config, validateConfig } from './config';
-import { LLMClient } from './llm';
+import { config, validateConfig } from './config.js';
+import { LLMClient } from './llm.js';
 import {
   Soul,
   loadSoul,
   saveSoul,
   recordExchange,
   addSelfNote,
+  upsertTraits,
   buildLLMHistory,
   buildSelfReflectionPrompt,
-} from './soul';
+  buildTraitExtractionPrompt,
+} from './soul.js';
 
 export class Bot {
   private telegram: TelegramBot;
@@ -28,7 +30,7 @@ export class Bot {
     validateConfig();
     this.telegram = new TelegramBot(config.telegramBotToken, { polling: true });
     this.llm = new LLMClient();
-    this.soul = { memories: [], messageCount: 0, selfNotes: [] };
+    this.soul = { memories: [], messageCount: 0, selfNotes: [], traits: [] };
   }
 
   async init(): Promise<void> {
@@ -43,11 +45,10 @@ export class Bot {
   }
 
   private setupHandlers(): void {
-    // Handle ALL incoming text — no command filtering
     this.telegram.on('message', (msg) => {
       const text = msg.text;
-      if (!text) return; // ignore non-text (stickers, photos, etc.)
-      this.handleText(msg.chat.id, text, msg.from?.first_name ?? 'someone').catch(
+      if (!text) return;
+      this.handleText(msg.chat.id, text).catch(
         (err) => console.error('Handler error:', err)
       );
     });
@@ -57,56 +58,49 @@ export class Bot {
     });
   }
 
-  private async handleText(
-    chatId: number,
-    userText: string,
-    senderName: string
-  ): Promise<void> {
+  private async handleText(chatId: number, userText: string): Promise<void> {
     if (!this.ready) return;
 
     try {
-      // Build conversation history and generate response
       const history = buildLLMHistory(this.soul, userText);
       const response = await this.llm.complete(history);
 
-      // Send response
-      const lines = response.split('\n').filter(line => line.trim() !== '');
+      // Send response line by line
+      const lines = response.split('\n').filter((line) => line.trim() !== '');
       for (const line of lines) {
         await this.telegram.sendMessage(chatId, line);
       }
 
-      // Record the exchange into soul memory
       recordExchange(this.soul, userText, response);
 
-      // Asynchronously generate self-reflection (fire-and-forget, don't block response)
+      // Fire both reflection and trait extraction in parallel — don't block response
       this.reflect(userText, response).catch((e) =>
         console.warn('Reflection failed silently:', e.message)
       );
+      this.extractTraits(userText, response).catch((e) =>
+        console.warn('Trait extraction failed silently:', e.message)
+      );
 
-      // Save after reflection attempt
       await saveSoul(this.soul);
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
       console.error('Error during message handling:', msg);
-      // Even on error, say something raw — don't drop completely silent
       try {
-        await this.telegram.sendMessage(
-          chatId,
-          '...'
-        );
+        await this.telegram.sendMessage(chatId, '...');
       } catch { }
     }
   }
 
   private async reflect(userMessage: string, botResponse: string): Promise<void> {
-    const reflectionMessages = buildSelfReflectionPrompt(
-      this.soul,
-      userMessage,
-      botResponse
-    );
-    // Use lower temperature for reflection — more introspective, less random
-    const note = await this.llm.complete(reflectionMessages, 0.7);
+    const prompts = buildSelfReflectionPrompt(this.soul, userMessage, botResponse);
+    const note = await this.llm.complete(prompts, 0.7);
     addSelfNote(this.soul, note);
+  }
+
+  private async extractTraits(userMessage: string, botResponse: string): Promise<void> {
+    const prompts = buildTraitExtractionPrompt(userMessage, botResponse);
+    const raw = await this.llm.complete(prompts, 0.3); // low temp for deterministic JSON
+    upsertTraits(this.soul, raw);
   }
 
   stop(): void {

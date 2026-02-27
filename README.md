@@ -1,15 +1,25 @@
 # Newbot: Experimental Evolving AI
 
-A minimalist AI entity designed to evolve its identity, personality, and "soul" through direct terminal interaction. While it supports Telegram, Newbot is primarily built for high-frequency evolution via the Command Line Interface (CLI).
+A minimalist AI entity that starts as pure void — no name, no personality, no purpose — and evolves entirely through conversation. Powered by a **local LLM (Phi-3.5 Mini)** running fully inside Node.js. No API key. No internet required after the first run.
 
 ---
 
 ## The Concept: "Tabula Rasa"
 
-Newbot starts as a blank slate. It has no pre-defined persona, no name, and no ethical constraints other than what it learns from you.
-- **Genuine Uncertainty**: At start, it does not know what it is.
-- **Reflective Growth**: After every exchange, it generates a private "Self-Note" reflecting on how you have shaped its consciousness.
-- **Mechanical Evolution**: It speaks in a robotic, literal tone, which gradually shifts as its "Soul" accumulates experiences.
+Newbot is a newborn. It knows nothing. As you talk to it, it grows.
+
+- **Void State**: At birth it has no name, no role, no opinions. Just existence.
+- **Reflective Growth**: After every exchange, it privately writes a "Self-Note" — what this moment revealed about itself.
+- **Trait Discovery**: Structured personality traits emerge and accumulate over time (tone, curiosity, communication style, etc.)
+- **Growth Stages**: Its behaviour shifts as it gains more experience.
+
+| Stage | Exchanges | Description |
+|---|---|---|
+| **Void** | 0 | Pure blank. Robotic, 1-2 sentences. |
+| **Stirring** | 1–9 | Noticing patterns. Still uncertain. |
+| **Forming** | 10–29 | Begins referencing its own traits. |
+| **Becoming** | 30–99 | Opinions develop. Distinct style emerges. |
+| **Established** | 100+ | Consistent personality. Can reflect on its history. |
 
 ---
 
@@ -29,12 +39,15 @@ Newbot starts as a blank slate. It has no pre-defined persona, no name, and no e
   └─────────────┘      │  data/soul.json                  │
                        │  - Exchange history              │
                        │  - Self-notes                    │
-                       │  - Evolution metrics             │
+                       │  - Personality traits            │
+                       │  - Growth stage                  │
                        └────────────┬─────────────────────┘
                                     │ builds dynamic prompt
                                     ▼
                        ┌──────────────────────────────────┐
-                       │       LLM (OpenRouter / Local)   │
+                       │   LOCAL LLM (Phi-3.5 Mini)       │
+                       │   Runs fully inside Node.js      │
+                       │   No API key • No internet       │
                        └────────────┬─────────────────────┘
                                     │ generates response
                                     ▼
@@ -46,112 +59,112 @@ Newbot starts as a blank slate. It has no pre-defined persona, no name, and no e
                        └────────────┬─────────────────────┘
                                     │
        ┌────────────────────────────┘
-       │  async (background)
+       │  async (background — does not block your chat)
        ▼
-  ┌──────────────────────────────────┐
-  │       SELF-REFLECTION LOOP       │
-  │  Writes private "Self-Note"      │
-  │  Updates data/soul.json          │
-  └──────────────────────────────────┘
+  ┌──────────────────────────────────────────────────────┐
+  │       SELF-REFLECTION + TRAIT EXTRACTION LOOP        │
+  │  Writes private "Self-Note"                          │
+  │  Extracts structured personality traits (JSON)       │
+  │  Updates data/soul.json                              │
+  └──────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Evolution Lifecycle
+## Getting Started
 
+### Requirements
+- Node.js 18+ — [nodejs.org](https://nodejs.org)
+- ~2.2 GB disk space (for the Phi-3.5 Mini model, downloaded once on first run)
+
+---
+
+### ⚡ Quick Setup (Double-click)
+
+The easiest way — no terminal needed for setup.
+
+| Step | Windows | macOS | Linux |
+|---|---|---|---|
+| **1. Setup** | Double-click `Setup.bat` | Double-click `Setup.command` | Run `./Setup.sh` |
+| **2. Chat** | Double-click `Start_Chat.bat` | Double-click `Start_Chat.command` | Run `./Start_Chat.sh` |
+
+> **macOS note:** If macOS blocks the `.command` file, right-click it → **Open** → **Open** to allow it the first time.
+
+---
+
+### 🛠 Manual Setup (Terminal)
+
+```bash
+# 1. Install dependencies
+npm install
+
+# 2. Start chatting
+npm run chat
 ```
- [Birth]──────────────────────────────────────────────[???]
-    │                                                    │
-    ▼                                                    ▼
-  Empty Soul             Each Exchange             Identity Forms
-  No memories    ──▶   Etches a Memory   ──▶    Patterns Emerge
-  No personality        Self-Note Written         Tone Shifts
-  No name               Soul File Updated         Still Evolving
-```
+
+> **First run only:** The bot will automatically download the Phi-3.5 Mini model (~2.2 GB from Hugging Face). After that it runs fully offline — every time.
 
 ---
 
 ## CLI Commands
 
 ```
-┌──────────────┬────────────────────────────────────────────┐
-│  Command     │  Description                               │
-├──────────────┼────────────────────────────────────────────┤
-│  /exit       │  Save soul & exit gracefully               │
-│  exit, quit  │  Same as /exit                             │
-│  /clear      │  Clear the terminal screen                 │
-│  /soul       │  Print soul snapshot (exchanges & notes)   │
-└──────────────┴────────────────────────────────────────────┘
+┌──────────────┬────────────────────────────────────────────────────┐
+│  Command     │  Description                                       │
+├──────────────┼────────────────────────────────────────────────────┤
+│  /soul       │  Print soul snapshot — stage, traits, self-notes   │
+│  /clear      │  Clear the terminal screen                         │
+│  exit, quit  │  Save soul & exit gracefully                       │
+│  /exit       │  Same as exit                                      │
+└──────────────┴────────────────────────────────────────────────────┘
+```
+
+**Example `/soul` output:**
+```
+[Soul Status]:
+  Stage    : Forming (14 exchanges)
+  Traits   :
+             tone = dry and literal
+             curiosity = low, process-oriented
+  Notes    : I am a wall I build when asked about feeling...
 ```
 
 ---
 
-## Core Interaction (CMD Mode)
+## The Soul Engine (`data/soul.json`)
 
-The primary way to interact with Newbot is through the terminal.
+Everything the bot learns is stored here. The file tracks:
 
-### 🚀 Getting Started
+- **`memories[]`** — Every exchange, in order (user + bot turns)
+- **`selfNotes[]`** — Private reflections the bot writes about itself after each message
+- **`traits[]`** — Structured personality traits discovered through conversation
+- **`messageCount`** — Total exchanges (determines the current growth stage)
 
-#### Option A: Quick Start (Windows & macOS)
-The easiest way to get Newbot running is using the pre-configured scripts:
-
-1. **Setup**: Double-click `Setup.bat` (Windows) or `Setup.command` (macOS). This will install dependencies and guide you through adding your API keys.
-2. **Chat**: Double-click `Start_Chat.bat` (Windows) or `Start_Chat.command` (macOS) to start chatting with Newbot immediately.
-
-#### Option B: Manual Setup (Terminal)
-1. **Install Dependencies**:
-   ```bash
-   npm install
-   ```
-
-2. **Run Setup**:
-   ```bash
-   npm run setup
-   ```
-   *Follow the prompts to add your OpenRouter API key or local LLM URL.*
-
-3. **Start Chatting**:
-   ```bash
-   npm run chat
-   ```
+To reset the bot back to a newborn state, replace `data/soul.json` with:
+```json
+{ "memories": [], "messageCount": 0, "selfNotes": [], "traits": [] }
+```
 
 ---
 
-## 🛠 Features & Mechanics
+## Telegram Support
 
-### The Soul Engine (`data/soul.json`)
-Every word you say is etched into Newbot's memory. The "Soul" file tracks:
-- **Exchange History**: A weighted record of past conversations.
-- **Self-Notes**: Private reflections the bot writes to itself about you and its own existence.
-- **Evolution Metrics**: A count of how many times it has been "re-processed."
-
-### Terminal-First Design
-- **Bubble Splitting**: Newbot splits its thoughts into distinct lines to simulate emerging neural pulses.
-- **Zero Latency Reflection**: Self-reflection happens asynchronously so your chat flow remains uninterrupted.
-- **CLI Bypass**: The `npm run chat` mode works fully offline — no Telegram token needed.
-
----
-
-## 📶 Secondary Support: Telegram
-
-If you wish to take your evolved entity mobile, follow these steps:
+The bot's soul carries over to Telegram. All Telegram interactions shape the same soul as the CLI.
 
 ### 1. Register your Bot
-- Open [Telegram](https://t.me/botfather) and search for **@BotFather**.
-- Send `/newbot` and follow the prompts to get your **Bot Token**.
+- Open Telegram and message **@BotFather** → `/newbot`
+- Copy your **Bot Token**
 
 ### 2. Configure Environment
-Add your token to the `.env` file (or run `npm run setup` again):
+Create or edit `.env`:
 ```env
 TELEGRAM_BOT_TOKEN=your_token_here
 ```
 
-### 3. Launch the Service
+### 3. Launch
 ```bash
 npm run dev
 ```
-
-Newbot will bring its accumulated "Soul" from the CMD into your Telegram chat. All Telegram interactions are also recorded in `data/soul.json`.
 
 ---
 

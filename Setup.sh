@@ -1,9 +1,11 @@
 #!/bin/bash
+# Setup.sh — Linux setup script for Newbot
+
 cd "$(dirname "$0")"
 
 echo ""
 echo " ============================================"
-echo "         NEWBOT - SETUP (macOS)"
+echo "         NEWBOT - SETUP (Linux)"
 echo " ============================================"
 echo ""
 echo " This will install all dependencies."
@@ -15,16 +17,15 @@ npm install
 if [ $? -ne 0 ]; then
   echo ""
   echo " [ERROR] npm install failed. Is Node.js installed?"
-  echo " Download it from: https://nodejs.org"
+  echo " Install with: sudo apt install nodejs npm"
+  echo "   or visit: https://nodejs.org"
   echo ""
-  read -n 1 -s -r -p " Press any key to close..."
   exit 1
 fi
 
 echo ""
 echo " ============================================"
-echo "  Setup complete! Run Start_Chat.command"
+echo "  Setup complete! Run ./Start_Chat.sh"
 echo "  to begin chatting."
 echo " ============================================"
 echo ""
-read -n 1 -s -r -p " Press any key to close..."

@@ -1,9 +1,11 @@
 #!/bin/bash
+# Start_Chat.sh — Linux chat launcher for Newbot
+
 cd "$(dirname "$0")"
 
 echo ""
 echo " ============================================"
-echo "         NEWBOT (macOS)"
+echo "         NEWBOT (Linux)"
 echo " ============================================"
 echo ""
 echo " Starting..."
@@ -14,13 +16,9 @@ npm install --silent
 if [ $? -ne 0 ]; then
   echo ""
   echo " [ERROR] Could not install dependencies."
-  echo " Run Setup.command first, then try again."
+  echo " Run ./Setup.sh first, then try again."
   echo ""
-  read -n 1 -s -r -p " Press any key to close..."
   exit 1
 fi
 
 npm run chat
-
-echo ""
-read -n 1 -s -r -p " Press any key to close..."

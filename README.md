@@ -47,11 +47,29 @@ Every word you say is etched into Newbot's memory. The "Soul" file tracks:
 - **Zero Latency Reflection**: Self-reflection happens asynchronously so your chat flow remains uninterrupted.
 - **CLI Bypass**: The `npm run chat` mode ignores Telegram requirements, allowing for offline/local-only evolution.
 
-## 📡 Secondary Support: Telegram
-If you wish to take your evolved entity mobile:
-1. Ensure `TELEGRAM_BOT_TOKEN` is in your `.env`.
-2. Run `npm run dev` or `npm start`.
-3. Newbot will bring its accumulated "Soul" from the CMD into the Telegram chat.
+## 📶 Secondary Support: Telegram
+
+If you wish to take your evolved entity mobile, follow these steps to enable Telegram integration:
+
+### 1. Register your Bot
+- Open [Telegram](https://t.me/botfather) and search for **@BotFather**.
+- Send `/newbot` and follow the prompts to get your **Bot Token**.
+
+### 2. Configure Environment
+Add your token to the `.env` file (or run `npm run setup` again):
+```env
+TELEGRAM_BOT_TOKEN=your_token_here
+```
+
+### 3. Launch the Service
+```bash
+# Start the Telegram listener
+npm run dev
+```
+
+Newbot will automatically bring its accumulated "Soul" from the CMD into your Telegram chat. Any interaction on Telegram will also be recorded and reflected upon in `data/soul.json`.
+
+---
 
 ## 📂 Repository
 [https://github.com/xzyqrn/newbot.git](https://github.com/xzyqrn/newbot.git)

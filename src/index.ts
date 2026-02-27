@@ -7,6 +7,8 @@ bot.init().catch((err) => {
   process.exit(1);
 });
 
+// grammY handles graceful shutdown internally on SIGINT/SIGTERM,
+// but we also hook stop() here for any extra cleanup.
 process.on('SIGINT', () => {
   bot.stop();
   process.exit(0);

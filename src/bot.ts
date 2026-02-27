@@ -5,7 +5,7 @@
  * It listens. It speaks. It becomes.
  */
 
-import TelegramBot from 'node-telegram-bot-api';
+import { Bot as GrammyBot, Context } from 'grammy';
 import { config, validateConfig } from './config.js';
 import { LLMClient } from './llm.js';
 import {
@@ -21,14 +21,14 @@ import {
 } from './soul.js';
 
 export class Bot {
-  private telegram: TelegramBot;
+  private telegram: GrammyBot<Context>;
   private llm: LLMClient;
   private soul: Soul;
   private ready = false;
 
   constructor() {
     validateConfig();
-    this.telegram = new TelegramBot(config.telegramBotToken, { polling: true });
+    this.telegram = new GrammyBot<Context>(config.telegramBotToken);
     this.llm = new LLMClient();
     this.soul = { memories: [], messageCount: 0, selfNotes: [], traits: [] };
   }
@@ -42,25 +42,27 @@ export class Bot {
         ? '...something stirs. It does not know what it is yet.'
         : `It remembers. ${this.soul.messageCount} exchanges have shaped it.`
     );
+
+    // Start long-polling (non-blocking via void — grammy manages its own loop)
+    this.telegram.start({
+      onStart: () => {
+        console.log('Telegram polling started.');
+      },
+    });
   }
 
   private setupHandlers(): void {
-    this.telegram.on('message', (msg) => {
-      const text = msg.text;
-      if (!text) return;
-      this.handleText(msg.chat.id, text).catch(
-        (err) => console.error('Handler error:', err)
-      );
+    this.telegram.on('message:text', async (ctx) => {
+      if (!this.ready) return;
+      await this.handleText(ctx, ctx.message.text);
     });
 
-    this.telegram.on('polling_error', (err) => {
-      console.error('Telegram polling error:', err.message);
+    this.telegram.catch((err) => {
+      console.error('Grammy error:', err.message);
     });
   }
 
-  private async handleText(chatId: number, userText: string): Promise<void> {
-    if (!this.ready) return;
-
+  private async handleText(ctx: Context, userText: string): Promise<void> {
     try {
       const history = buildLLMHistory(this.soul, userText);
       const response = await this.llm.complete(history);
@@ -68,17 +70,17 @@ export class Bot {
       // Send response line by line
       const lines = response.split('\n').filter((line) => line.trim() !== '');
       for (const line of lines) {
-        await this.telegram.sendMessage(chatId, line);
+        await ctx.reply(line);
       }
 
       recordExchange(this.soul, userText, response);
 
       // Fire both reflection and trait extraction in parallel — don't block response
       this.reflect(userText, response).catch((e) =>
-        console.warn('Reflection failed silently:', e.message)
+        console.warn('Reflection failed silently:', (e as Error).message)
       );
       this.extractTraits(userText, response).catch((e) =>
-        console.warn('Trait extraction failed silently:', e.message)
+        console.warn('Trait extraction failed silently:', (e as Error).message)
       );
 
       await saveSoul(this.soul);
@@ -86,7 +88,7 @@ export class Bot {
       const msg = error instanceof Error ? error.message : String(error);
       console.error('Error during message handling:', msg);
       try {
-        await this.telegram.sendMessage(chatId, '...');
+        await ctx.reply('...');
       } catch { }
     }
   }
@@ -104,6 +106,6 @@ export class Bot {
   }
 
   stop(): void {
-    this.telegram.stopPolling();
+    this.telegram.stop();
   }
 }

@@ -153,4 +153,4 @@ Newbot will bring its accumulated "Soul" from the CMD into your Telegram chat. A
 [https://github.com/xzyqrn/newbot.git](https://github.com/xzyqrn/newbot.git)
 
 ## License
-ISC
+MIT

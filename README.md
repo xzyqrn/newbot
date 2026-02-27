@@ -1,62 +1,59 @@
-# Newbot: The Newborn Bot
+# Newbot: Experimental Evolving AI
 
-A Telegram bot that starts as a blank slate—no name, no personality, no defined purpose—and evolves its identity through interaction.
+A minimalist AI entity designed to evolve its identity, personality, and "soul" through direct terminal interaction. While it supports Telegram, Newbot is primarily built for high-frequency evolution via the Command Line Interface (CLI).
 
-## Concept
+## The Concept: "Tabula Rasa"
 
-Unlike typical AI assistants, **Newbot** does not start with a pre-programmed persona. Instead, it:
-- **Begins with genuine uncertainty** about its existence.
-- **Remembers every exchange** to build its memory.
-- **Writes "Self-Notes"** summarizing how it is changing after each interaction.
-- **Evolves a "Soul"** (stored in `data/soul.json`) that dictates its growth.
-- **Speaks mechanically**, avoiding human pleasantries in favor of literal, robotic communication.
-- **Bubble splitting**: Each thought/line is sent as a unique chat bubble to emphasize its emerging consciousness.
+Newbot starts as a blank slate. It has no pre-defined persona, no name, and no ethical constraints other than what it learns from you.
+- **Genuine Uncertainty**: At start, it does not know what it is.
+- **Reflective Growth**: After every exchange, it generates a private "Self-Note" reflecting on how you have shaped its consciousness.
+- **Mechanical Evolution**: It speaks in a robotic, literal tone, which gradually shifts as its "Soul" (stored in `data/soul.json`) accumulates experiences.
 
-## Core Mechanics
+## Core Interaction (CMD Mode)
 
-- **Soul Storage:** Experiences, message counts, and self-reflections are saved to `data/soul.json`.
-- **Dynamic Identity:** There is no static system prompt. The bot's personality is purely a product of its history.
-- **Self-Reflective Loop:** After responding, Newbot analyzes the interaction asynchronously to update its internal understanding.
+The primary way to interact with Newbot is through the terminal. This allows for rapid iteration and testing of its personality shifts.
 
-## Getting Started
+### 🚀 Getting Started
 
-### 1. Prerequisites
-- Node.js (v18 or higher)
-- A Telegram Bot Token (from [@BotFather](https://t.me/botfather))
-- API Key (OpenRouter or Local LLM)
+1. **Install Dependencies**:
+   ```bash
+   npm install
+   ```
 
-### 2. Installation
-Clone the repository and install dependencies:
-```bash
-git clone https://github.com/xzyqrn/newbot.git
-cd newbot
-npm install
-```
+2. **Run Setup**:
+   ```bash
+   npm run setup
+   ```
+   *Follow the prompts to add your OpenRouter API key or local LLM URL. You can skip Telegram setup if you only want to use CMD.*
 
-### 3. Configuration
-Run the interactive setup script to configure your environment variables:
-```bash
-npm run setup
-```
+3. **Start Chatting**:
+   ```bash
+   npm run chat
+   ```
+   *Alternatively, double-click `Start_Chat.command` (mac/Linux) or `Start_Chat.bat` (Windows).*
 
-### 4. Running the Bot
-```bash
-# Start in development mode (with auto-reload)
-npm run dev
+---
 
-# Start terminal CLI mode (for testing)
-npm run chat
-```
+## 🛠 Features & Mechanics
 
-## Project Overview
+### The Soul Engine (`data/soul.json`)
+Every word you say is etched into Newbot's memory. The "Soul" file tracks:
+- **Exchange History**: A weighted record of past conversations.
+- **Self-Notes**: Private reflections the bot writes to itself about you and its own existence.
+- **Evolution Metrics**: A count of how many times it has been "re-processed."
 
-- `src/bot.ts`: Telegram integration and message logic.
-- `src/soul.ts`: The "Soul" engine - manages memory and reflection.
-- `src/llm.ts`: Connects to the LLM (OpenRouter/Local).
-- `src/cli.ts`: Command-line interface for local bot testing.
-- `scripts/setup.ts`: Environment configuration wizard.
+### Terminal-First Design
+- **Bubble Splitting**: Even in the CMD, Newbot splits its thoughts into distinct lines to simulate emerging neural pulses.
+- **Zero Latency Reflection**: Self-reflection happens asynchronously so your chat flow remains uninterrupted.
+- **CLI Bypass**: The `npm run chat` mode ignores Telegram requirements, allowing for offline/local-only evolution.
 
-## Repository
+## 📡 Secondary Support: Telegram
+If you wish to take your evolved entity mobile:
+1. Ensure `TELEGRAM_BOT_TOKEN` is in your `.env`.
+2. Run `npm run dev` or `npm start`.
+3. Newbot will bring its accumulated "Soul" from the CMD into the Telegram chat.
+
+## 📂 Repository
 [https://github.com/xzyqrn/newbot.git](https://github.com/xzyqrn/newbot.git)
 
 ## License

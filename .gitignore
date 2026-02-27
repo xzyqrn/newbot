@@ -1,5 +1,35 @@
+# Environment variables
 .env
-.data
-data
-node_modules
+.env.*
+
+# Dependencies
+node_modules/
+package-lock.json
+
+# Build output
+dist/
+build/
+
+# User data & Brain
+data/
+.data/
 soul.json
+*.json
+!package.json
+!tsconfig.json
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# System files
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo

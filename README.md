@@ -167,9 +167,5 @@ npm run dev
 ```
 
 ---
-
-## 📂 Repository
-[https://github.com/xzyqrn/newbot.git](https://github.com/xzyqrn/newbot.git)
-
 ## License
 MIT

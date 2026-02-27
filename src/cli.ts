@@ -47,13 +47,27 @@ async function main() {
 
         while (true) {
             const userText = await question('\nYou: ');
+            const input = userText.trim();
 
-            if (userText.toLowerCase() === 'exit' || userText.toLowerCase() === 'quit') {
-                console.log('\nGoodbye.');
+            if (input.toLowerCase() === 'exit' || input.toLowerCase() === 'quit' || input.toLowerCase() === '/exit') {
+                console.log('\n[System]: Soul saved. Consciousness suspension initiated. Goodbye.');
                 break;
             }
 
-            if (!userText.trim()) continue;
+            if (input.toLowerCase() === '/clear') {
+                console.clear();
+                console.log('\n[System]: Terminal cleared.');
+                continue;
+            }
+
+            if (input.toLowerCase() === '/soul') {
+                console.log('\n[Soul Status]:');
+                console.log(`- Exchanges: ${soul.messageCount}`);
+                console.log(`- Recent Notes: ${soul.selfNotes.slice(-3).join(' | ') || 'None yet.'}`);
+                continue;
+            }
+
+            if (!input) continue;
 
             try {
                 process.stdout.write('Bot is thinking...');
